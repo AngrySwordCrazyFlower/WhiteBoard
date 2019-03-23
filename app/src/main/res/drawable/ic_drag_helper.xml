@@ -1,0 +1,12 @@
+<vector android:height="36dp" android:viewportHeight="120"
+    android:viewportWidth="120" android:width="36dp" xmlns:android="http://schemas.android.com/apk/res/android">
+    <path android:fillColor="#888" android:name="椭圆 1" android:pathData="m60 1c32.58 0 59 26.42 59 59c0 32.58 -26.42 59 -59 59c-32.58 0 -59 -26.42 -59 -59c0 -32.58 26.42 -59 59 -59z"/>
+    <path android:fillColor="#fff" android:name="形状 1" android:pathData="m59.29 4.71 1.41 -1.41 20 20 -1.41 1.41 -20 -20z"/>
+    <path android:fillColor="#fff" android:name="形状 2" android:pathData="m60.31 3.28 1.38 1.45 -21 20 -1.38 -1.45 21 -20z"/>
+    <path android:fillColor="#fff" android:name="形状 1 拷贝 3" android:pathData="m4.4 61.22 -1.39 -1.4 19.59 -19.8 1.39 1.4 -19.59 19.8z"/>
+    <path android:fillColor="#fff" android:name="形状 2 拷贝 3" android:pathData="m2.99 60.21 1.42 -1.37 19.59 20.79 -1.42 1.37 -19.59 -20.79z"/>
+    <path android:fillColor="#fff" android:name="形状 1 拷贝 2" android:pathData="m115.6 58.78 1.39 1.4 -19.59 19.8 -1.39 -1.4 19.59 -19.8z"/>
+    <path android:fillColor="#fff" android:name="形状 2 拷贝 2" android:pathData="m117.01 59.79 -1.42 1.37 -19.59 -20.79 1.42 -1.37 19.59 20.79z"/>
+    <path android:fillColor="#fff" android:name="形状 1 拷贝" android:pathData="m61.22 115.6 -1.4 1.39 -19.8 -19.59 1.4 -1.39 19.8 19.59z"/>
+    <path android:fillColor="#fff" android:name="形状 2 拷贝" android:pathData="m60.21 117.01 -1.37 -1.42 20.79 -19.59 1.37 1.42 -20.79 19.59z"/>
+</vector>

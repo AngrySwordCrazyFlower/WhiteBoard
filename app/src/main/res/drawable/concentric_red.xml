@@ -1,0 +1,15 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <path
+        android:fillColor="#ddd"
+        android:fillAlpha="0.67"
+        android:name="椭圆 1"
+        android:pathData="m60 0c33.14 0 60 26.86 60 60c0 33.14 -26.86 60 -60 60c-33.14 0 -60 -26.86 -60 -60c0 -33.14 26.86 -60 60 -60z" />
+    <path
+        android:fillColor="#F00"
+        android:name="椭圆 2"
+        android:pathData="m60 30c16.57 0 30 13.43 30 30c0 16.57 -13.43 30 -30 30c-16.57 0 -30 -13.43 -30 -30c0 -16.57 13.43 -30 30 -30z" />
+</vector>

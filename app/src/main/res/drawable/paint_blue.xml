@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#800000FF">
+    <item
+        android:drawable="@drawable/concentric_blue"
+        />
+</ripple>

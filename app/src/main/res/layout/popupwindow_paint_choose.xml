@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/paint_choose_container"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent">
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/paint_constraint_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="@drawable/container_background">
+
+        <com.example.crazyflower.whiteboard.MySeekBar
+            android:id="@+id/line_weight_seek_bar"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/line_color_black"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent" />
+
+        <View
+            android:id="@+id/line_color_black"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintWidth_percent="0.1"
+            app:layout_constraintDimensionRatio="1:1"
+            android:background="@drawable/paint_black"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line_weight_seek_bar"
+            app:layout_constraintRight_toLeftOf="@id/line_color_white"
+            app:layout_constraintBottom_toTopOf="@id/line_weight_container"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/line_color_white"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/paint_white"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintLeft_toRightOf="@id/line_color_black"
+            app:layout_constraintTop_toTopOf="@id/line_color_black"
+            app:layout_constraintBottom_toBottomOf="@id/line_color_black"
+            app:layout_constraintRight_toLeftOf="@id/line_color_red"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/line_color_red"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/paint_red"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintLeft_toRightOf="@id/line_color_white"
+            app:layout_constraintTop_toTopOf="@id/line_color_black"
+            app:layout_constraintBottom_toBottomOf="@id/line_color_black"
+            app:layout_constraintRight_toLeftOf="@id/line_color_green"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/line_color_green"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/paint_green"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintLeft_toRightOf="@id/line_color_red"
+            app:layout_constraintTop_toTopOf="@id/line_color_black"
+            app:layout_constraintBottom_toBottomOf="@id/line_color_black"
+            app:layout_constraintRight_toLeftOf="@id/line_color_blue"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/line_color_blue"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/paint_blue"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintLeft_toRightOf="@id/line_color_green"
+            app:layout_constraintTop_toTopOf="@id/line_color_black"
+            app:layout_constraintBottom_toBottomOf="@id/line_color_black"
+            app:layout_constraintRight_toLeftOf="@id/line_color_yellow"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/line_color_yellow"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/paint_yellow"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintLeft_toRightOf="@id/line_color_blue"
+            app:layout_constraintTop_toTopOf="@id/line_color_black"
+            app:layout_constraintBottom_toBottomOf="@id/line_color_black"
+            app:layout_constraintRight_toLeftOf="@id/line_color_purple"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/line_color_purple"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/paint_purple"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintLeft_toRightOf="@id/line_color_yellow"
+            app:layout_constraintTop_toTopOf="@id/line_color_black"
+            app:layout_constraintBottom_toBottomOf="@id/line_color_black"
+            app:layout_constraintRight_toLeftOf="@id/line_color_aqua"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/line_color_aqua"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/paint_aqua"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintLeft_toRightOf="@id/line_color_purple"
+            app:layout_constraintTop_toTopOf="@id/line_color_black"
+            app:layout_constraintBottom_toBottomOf="@id/line_color_black"
+            app:layout_constraintRight_toRightOf="parent"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/line_weight_container"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line_color_black"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:id="@+id/line_weight_show"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/line_weight_show_background"
+            app:layout_constraintLeft_toLeftOf="@id/line_weight_container"
+            app:layout_constraintRight_toRightOf="@id/line_weight_container"
+            app:layout_constraintTop_toTopOf="@id/line_weight_container"
+            app:layout_constraintBottom_toBottomOf="@id/line_weight_container"/>
+
+    </android.support.constraint.ConstraintLayout>
+</LinearLayout>
