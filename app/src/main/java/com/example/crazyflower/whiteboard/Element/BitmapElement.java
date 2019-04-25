@@ -6,21 +6,48 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import com.example.crazyflower.whiteboard.DrawViewUtil;
+
+import org.json.JSONObject;
 
 public class BitmapElement extends BasicElement {
 
     private static final String TAG = "BitmapElement";
     private Bitmap bitmap;
     private Paint paint;
-    private Matrix matrix;
+    private Matrix transformMatrix;
 
     public BitmapElement(Bitmap bitmap) {
+        super(ElementUtil.BITMAP_ELEMENT);
+        init();
+
         this.bitmap = bitmap;
-        this.paint = new Paint();
-        matrix = new Matrix();
+    }
+
+    protected BitmapElement(Parcel source) {
+        super(ElementUtil.BITMAP_ELEMENT, source);
+        init();
+
+        bitmap = source.readParcelable(Bitmap.class.getClassLoader());
+
+        float[] values = new float[9];
+        source.readFloatArray(values);
+        transformMatrix.setValues(values);
+    }
+
+    protected BitmapElement(JSONObject jsonObject) {
+        super(jsonObject);
+        init();
+    }
+
+    protected void init() {
+        bitmap = null;
+        paint = new Paint();
+        transformMatrix = new Matrix();
     }
 
     @Override
@@ -28,11 +55,13 @@ public class BitmapElement extends BasicElement {
         Matrix matrix;
         if (chosen) {
             this.paint.setShadowLayer(20, 20, 20, Color.BLACK);
-            matrix = new Matrix(this.matrix);
-            matrix.postScale(DrawViewUtil.CHOSEN_SCALE_COEFFICIENT, DrawViewUtil.CHOSEN_SCALE_COEFFICIENT, center.x, center.y);
+            matrix = new Matrix();
+            matrix.postConcat(this.transformMatrix);
+            matrix.postConcat(super.tempTransformMatrix);
+//            tempTransformMatrix.postScale(DrawViewUtil.CHOSEN_SCALE_COEFFICIENT, DrawViewUtil.CHOSEN_SCALE_COEFFICIENT, center.x, center.y);
         }
         else {
-            matrix = this.matrix;
+            matrix = this.transformMatrix;
             this.paint.clearShadowLayer();
         }
         canvas.drawBitmap(bitmap, matrix, paint);
@@ -45,7 +74,7 @@ public class BitmapElement extends BasicElement {
         float[] values = new float[9];
         float halfWidth = bitmap.getWidth();
         float halfHeight = bitmap.getHeight();
-        matrix.getValues(values);
+        transformMatrix.getValues(values);
 
         float x, y, transformX, transformY;
 
@@ -68,7 +97,7 @@ public class BitmapElement extends BasicElement {
         float[] values = new float[9];
         float halfWidth = bitmap.getWidth();
         float halfHeight = bitmap.getHeight();
-        matrix.getValues(values);
+        transformMatrix.getValues(values);
 
         float x, y, transformX, transformY;
 
@@ -93,9 +122,34 @@ public class BitmapElement extends BasicElement {
 
     @Override
     public void onTransform(Matrix matrix) {
-        this.matrix.postConcat(matrix);
+        this.transformMatrix.postConcat(matrix);
     }
 
+    @Override
+    public JSONObject toJSONObject() {
+        return new JSONObject();
+    }
 
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeParcelable(bitmap, flags);
+        float[] values = new float[9];
+        transformMatrix.getValues(values);
+        dest.writeFloatArray(values);
+    }
+
+    public static final Parcelable.Creator<BitmapElement> CREATOR = new Parcelable.Creator<BitmapElement>() {
+
+        @Override
+        public BitmapElement createFromParcel(Parcel source) {
+            return new BitmapElement(source);
+        }
+
+        @Override
+        public BitmapElement[] newArray(int size) {
+            return new BitmapElement[size];
+        }
+    };
 
 }

@@ -1,10 +1,18 @@
 package com.example.crazyflower.whiteboard;
 
+import android.graphics.Matrix;
+import android.graphics.PointF;
 import android.graphics.RectF;
 
 public class DrawViewUtil {
 
     public static final float CHOSEN_SCALE_COEFFICIENT = 1.1f;
+
+    protected static final int PAINT_MAX_STROKE_WIDTH = 12;
+    protected static final int PAINT_MIN_STROKE_WIDTH = 4;
+
+    protected static final float CANVAS_MIN_SCALE = 0.25f;
+    protected static final float CANVAS_MAX_SCALE = 6.0f;
 
     /**
      * 根据提供的上下左右四条边的x/y值，返回RectF,确保返回的RectF中，left<=right,top<=bottom。
@@ -55,10 +63,15 @@ public class DrawViewUtil {
         rectF.bottom = bottom;
     }
 
-    protected static final int PAINT_MAX_STROKE_WIDTH = 12;
-    protected static final int PAINT_MIN_STROKE_WIDTH = 4;
-
-    protected static final float CANVAS_MIN_SCALE = 1.0f / 3;
-    protected static final float CANVAS_MAX_SCALE = 5.0f;
+    public static void transformPoint(PointF pointF, Matrix matrix) {
+        float[] values = new float[9];
+        matrix.getValues(values);
+        float tempX = (pointF.x - values[2]) / values[0];
+        //values[0] * pointF.x + values[1] * pointF.y + values[2];
+        float tempY = (pointF.y - values[5]) / values[0];
+        //values[3] * pointF.x + values[4] * pointF.y + values[5];
+        pointF.x = tempX;
+        pointF.y = tempY;
+    }
 
 }

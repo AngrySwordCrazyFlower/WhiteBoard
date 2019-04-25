@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/draw_view_item_container"
+    android:layout_width="match_parent"
+    android:layout_height="180dp"
+    android:layout_margin="4dp"
+    app:cardElevation="5dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.example.crazyflower.whiteboard.DrawView
+            android:id="@+id/draw_view_sketch"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/detail_background"/>
+
+        <View
+            android:id="@+id/detail_background"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:layout_constraintWidth_percent="0.25"
+            app:layout_constraintRight_toRightOf="parent"
+            android:background="#CCCCCC"/>
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/draw_view_title"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:autoSizeTextType="uniform"
+            app:layout_constraintLeft_toLeftOf="@id/detail_background"
+            app:layout_constraintRight_toRightOf="@id/detail_background"
+            app:layout_constraintTop_toTopOf="@id/detail_background"
+            app:layout_constraintBottom_toTopOf="@id/draw_view_last_change"
+            android:padding="4dp"
+            android:textColor="@color/draw_view_sketch_text_color"
+            android:gravity="center"
+            android:maxLines="1"/>
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/draw_view_last_change"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:autoSizeTextType="uniform"
+            app:layout_constraintLeft_toLeftOf="@id/detail_background"
+            app:layout_constraintRight_toRightOf="@id/detail_background"
+            app:layout_constraintTop_toBottomOf="@id/draw_view_title"
+            app:layout_constraintBottom_toTopOf="@id/draw_view_detail_more"
+            android:padding="4dp"
+            android:textColor="@color/draw_view_sketch_text_color"
+            android:gravity="center"
+            android:maxLines="1" />
+
+        <ImageView
+            android:id="@+id/draw_view_detail_more"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintLeft_toLeftOf="@id/detail_background"
+            app:layout_constraintRight_toRightOf="@id/detail_background"
+            app:layout_constraintTop_toBottomOf="@id/draw_view_last_change"
+            app:layout_constraintBottom_toBottomOf="@id/detail_background"
+            android:src="@drawable/ic_more"/>
+
+    </android.support.constraint.ConstraintLayout>
+
+</android.support.v7.widget.CardView>

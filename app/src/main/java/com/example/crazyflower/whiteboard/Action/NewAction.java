@@ -1,8 +1,17 @@
 package com.example.crazyflower.whiteboard.Action;
 
-import com.example.crazyflower.whiteboard.Element.BasicElement;
+import android.os.Parcel;
 
+import com.example.crazyflower.whiteboard.Element.BasicElement;
+import com.example.crazyflower.whiteboard.Element.ElementUtil;
+import com.example.crazyflower.whiteboard.Element.PathElement;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 public class NewAction extends Action {
 
@@ -13,6 +22,18 @@ public class NewAction extends Action {
         this.element = element;
     }
 
+    public NewAction(JSONObject jsonObject, HashMap<UUID, BasicElement> map) throws JSONException {
+        super(ACTION_NEW, jsonObject);
+        element = ElementUtil.generateElementByJSONObject(jsonObject.getJSONObject(JSON_ELEMENT));
+        map.put(element.getUuid(), element);
+    }
+
+    public NewAction(Parcel source, HashMap<UUID, BasicElement> hashMap) {
+        super(ACTION_NEW, source);
+        element = source.readParcelable(BasicElement.class.getClassLoader());
+        hashMap.put(element.getUuid(), element);
+    }
+
     @Override
     public void redo(List<BasicElement> basicElements) {
         basicElements.add(element);
@@ -21,5 +42,21 @@ public class NewAction extends Action {
     @Override
     public void undo(List<BasicElement> basicElements) {
         basicElements.remove(element);
+    }
+
+    @Override
+    public void writeToJSONObject(JSONObject jsonObject) throws JSONException {
+        super.writeToJSONObject(jsonObject);
+        jsonObject.put(JSON_ELEMENT, element.toJSONObject());
+    }
+
+    public BasicElement getElement() {
+        return element;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeParcelable(element, flags);
     }
 }

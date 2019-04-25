@@ -1,5 +1,6 @@
 package com.example.crazyflower.whiteboard.GestureListener;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.PointF;
@@ -10,9 +11,12 @@ import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
 
+import com.example.crazyflower.whiteboard.Action.DeleteAction;
+import com.example.crazyflower.whiteboard.Action.TransformAction;
 import com.example.crazyflower.whiteboard.DrawView;
 import com.example.crazyflower.whiteboard.DrawViewUtil;
 import com.example.crazyflower.whiteboard.Element.BasicElement;
+import com.example.crazyflower.whiteboard.R;
 import com.example.crazyflower.whiteboard.Vector2D;
 
 import java.lang.ref.WeakReference;
@@ -25,8 +29,7 @@ public class ChosenRegionGestureListener extends GestureListener {
 
     private int downPointerId;
 
-    private PointF downPointF;
-    private PointF scrollPointF;
+    private float lastX, lastY;
 
     private PointF leftTop;
     private PointF leftBottom;
@@ -42,11 +45,17 @@ public class ChosenRegionGestureListener extends GestureListener {
 
 //    private int state;
 
-    public static final int NO_STATE = 0;
+    public static final int IDLE_STATE = 0;
     public static final int SCALING_STATE = 1;
     public static final int ROTATING_STATE = 2;
     public static final int TRANSLATING_STATE = 3;
     public static final int DELETING_STATE = 4;
+
+    private Matrix transformMatrix;
+
+    private Drawable deleteDrawable;
+    private Drawable rotateDrawable;
+    private Drawable scaleDrawable;
 
 //    private final static int DELETE_NO_STATE = 0;
 //    private final static int DELETE_DOWN_STATE = 1;
@@ -57,6 +66,8 @@ public class ChosenRegionGestureListener extends GestureListener {
 
     private PointF center;
 
+    private PointF pointF;
+
     private WeakReference<ChooseGestureListener> chooseGestureListenerWeakReference;
 
 //    public ChosenRegionGestureListener(DrawView drawView, List<BasicElement> chosenElements) {
@@ -64,13 +75,13 @@ public class ChosenRegionGestureListener extends GestureListener {
 //        super(drawView);
 //    }
 
-    public ChosenRegionGestureListener(DrawView drawView, ChooseGestureListener chooseGestureListener, List<BasicElement> chosenElements) {
+    public ChosenRegionGestureListener(Context context, List<BasicElement> chosenElements) {
+        super(context);
 //        this(rectF.left, rectF.top, rectF.right, rectF.bottom, chosenElements, deleteDrawable, rotateDrawable, scaleDrawable);
-        super(drawView);
         this.chosenElements = chosenElements;
-        downPointF = new PointF();
-        scrollPointF = new PointF();
-        state = NO_STATE;
+        lastX = 0;
+        lastY = 0;
+        state = IDLE_STATE;
 
         Region region = new Region();
         Rect dst = new Rect();
@@ -86,8 +97,10 @@ public class ChosenRegionGestureListener extends GestureListener {
         float centerY = (top + bottom) * 0.5f;
 
         center = new PointF(centerX, centerY);
+        transformMatrix = new Matrix();
+        initTransformMatrix();
         for (BasicElement basicElement : chosenElements)
-            basicElement.setChosen(center);
+            basicElement.setChosen(transformMatrix);
 
         left = centerX + (left - centerX) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
         right = centerX + (right - centerX) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
@@ -95,86 +108,133 @@ public class ChosenRegionGestureListener extends GestureListener {
         bottom = centerY + (bottom - centerY) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
 
         leftTop = new PointF(left, top);
-        leftBottom = new PointF(left, bottom);
         rightTop = new PointF(right, top);
         rightBottom = new PointF(right, bottom);
+        leftBottom = new PointF(left, bottom);
 
-        leftTop = new PointF(bound.left, bound.top);
-        rightTop = new PointF(bound.right, bound.top);
-        rightBottom = new PointF(bound.right, bound.bottom);
-        leftBottom = new PointF(bound.left, bound.bottom);
+//        leftTop = new PointF(bound.left, bound.top);
+//        rightTop = new PointF(bound.right, bound.top);
+//        rightBottom = new PointF(bound.right, bound.bottom);
+//        leftBottom = new PointF(bound.left, bound.bottom);
 
-        this.chosenElements = chosenElements;
+        deleteDrawable = context.getResources().getDrawable(R.drawable.close);
+        rotateDrawable = context.getResources().getDrawable(R.drawable.rotate);
+        scaleDrawable = context.getResources().getDrawable(R.drawable.scale);
 
-        chooseGestureListenerWeakReference = new WeakReference<ChooseGestureListener>(chooseGestureListener);
+        state = IDLE_STATE;
 
+        pointF = new PointF();
+    }
+
+    private void initTransformMatrix() {
+        transformMatrix.reset();
+        transformMatrix.postScale(DrawViewUtil.CHOSEN_SCALE_COEFFICIENT, DrawViewUtil.CHOSEN_SCALE_COEFFICIENT, center.x, center.y);
     }
 
 //    public ChosenRegionGestureListener(float left, float top, float right, float bottom, List<BasicElement> chosenElements, Drawable deleteDrawable, Drawable rotateDrawable, Drawable scaleDrawable) {
 //        this.chosenElements = chosenElements;
 //        downPointF = new PointF();
 //        scrollPointF = new PointF();
-//        state = NO_STATE;
+//        state = IDLE_STATE;
 //
-//        float centerX = (left + right) * 0.5f;
-//        float centerY = (top + bottom) * 0.5f;
-//        left = centerX - (centerX - left) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
-//        right = centerX + (right - centerX) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
-//        top = centerY - (centerY - top) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
-//        bottom = centerY + (bottom - centerY) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
+//        float getCenterX = (left + right) * 0.5f;
+//        float getCenterY = (top + bottom) * 0.5f;
+//        left = getCenterX - (getCenterX - left) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
+//        right = getCenterX + (right - getCenterX) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
+//        top = getCenterY - (getCenterY - top) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
+//        bottom = getCenterY + (bottom - getCenterY) * DrawViewUtil.CHOSEN_SCALE_COEFFICIENT;
 //        leftTop = new PointF(left, top);
 //        leftBottom = new PointF(left, bottom);
 //        rightTop = new PointF(right, top);
 //        rightBottom = new PointF(right, bottom);
 //
 //
-//        this.state = NO_STATE;
+//        this.state = IDLE_STATE;
 //        this.canvasScale = 1;
 //    }
-
-    public boolean onTouch(MotionEvent motionEvent) {
+    @Override
+    public ActionWrapper onTouch(List<BasicElement> elements, MotionEvent motionEvent, Matrix matrix) {
 //        Log.d(TAG, "onTouch: ");
-        DrawView drawView = getDrawView();
-        if (null == drawView)
-            return false;
-        boolean result = false;
+//        Log.d(TAG, "onTouch: " + leftBottom.x + " " + leftBottom.y + " " + motionEvent.getX() + " " + motionEvent.getY());
+        ActionWrapper result = null;
+        float x, y;
         switch (motionEvent.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
-                if (NO_STATE == state) {
+                if (IDLE_STATE == state) {
+//                    result = onDown(motionEvent);
+
                     downPointerId = motionEvent.getPointerId(motionEvent.getActionIndex());
-                    drawView.transformEventCoordinateToCanvas(motionEvent, downPointF);
-                    if (isPressScale(downPointF.x, downPointF.y)) {
+                    pointF.x = motionEvent.getX();
+                    pointF.y = motionEvent.getY();
+                    DrawViewUtil.transformPoint(pointF, matrix);
+                    lastX = pointF.x;
+                    lastY = pointF.y;
+                    if (isPressScale(lastX, lastY)) {
                         startScaling();
-                        result = true;
-                    } else if (isPressRotate(downPointF.x, downPointF.y)) {
+                    } else if (isPressRotate(lastX, lastY)) {
                         startRotating();
-                        result = true;
-                    } else if (isPressDelete(downPointF.x, downPointF.y)) {
+                    } else if (isPressDelete(lastX, lastY)) {
                         startDeleting();
-                        result = true;
-                    } else if (isInRect(downPointF)) {
+                    } else if (isInRect(lastX, lastY)) {
                         startTranslating();
-                        result = true;
+                    } else {
+                        // 既不在矩形内，也没有点击三个操作按钮
+                        return null;
                     }
+                    result = new ActionWrapper(false);
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (downPointerId == motionEvent.getPointerId(motionEvent.getActionIndex())) {
-                    if (NO_STATE != state) {
-                        drawView.transformEventCoordinateToCanvas(motionEvent, scrollPointF);
-                        onScroll();
-                        result = true;
-                        drawView.invalidate();
+                    if (IDLE_STATE != state) {
+
+
+                        downPointerId = motionEvent.getPointerId(motionEvent.getActionIndex());
+                        pointF.x = motionEvent.getX();
+                        pointF.y = motionEvent.getY();
+                        DrawViewUtil.transformPoint(pointF, matrix);
+                        x = pointF.x;
+                        y = pointF.y;
+                        switch (state) {
+                            case SCALING_STATE:
+                                scaling(x, y);
+                                break;
+                            case ROTATING_STATE:
+                                rotating(x, y);
+                                break;
+                            case TRANSLATING_STATE:
+                                translating(x - lastX, y - lastY);
+                                lastX = x;
+                                lastY = y;
+                                break;
+                        }
+
+                        result = new ActionWrapper(true);
                     }
                 }
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
                 if (downPointerId == motionEvent.getPointerId(motionEvent.getActionIndex())) {
-                    if (NO_STATE != state) {
-                        onScrollEnd();
-                        result = true;
-                        drawView.invalidate();
+                    if (IDLE_STATE != state) {
+//                        result = onScrollEnd(motionEvent);
+
+                        if (state == TRANSLATING_STATE || state == ROTATING_STATE || state == SCALING_STATE) {
+                            result = new ActionWrapper();
+                            result.setAction(new TransformAction(chosenElements, getTransformMatrix()));
+                            result.setNeedInvalidate(true);
+                        } else if (state == DELETING_STATE && isPressDelete(motionEvent.getX(), motionEvent.getY())) {
+                            for (BasicElement element : chosenElements)
+                                element.cancelChosen();
+                            result = new ActionWrapper();
+                            result.setAction(new DeleteAction(chosenElements));
+                            result.setNeedInvalidate(true);
+                            result.setHoldOn(false);
+                        }
+
+                        state = IDLE_STATE;
+                        initTransformMatrix();
+
                     }
                 }
                 break;
@@ -189,65 +249,106 @@ public class ChosenRegionGestureListener extends GestureListener {
 //        chooseElement.draw(canvas);
 //    }
 
-    private void onScroll() {
-        switch (state) {
-            case SCALING_STATE:
-                scaling(scrollPointF.x, scrollPointF.y);
-                break;
-            case ROTATING_STATE:
-                rotating(scrollPointF);
-                break;
-            case TRANSLATING_STATE:
-                translating(scrollPointF.x - downPointF.x, scrollPointF.y - downPointF.y);
-                downPointF.x = scrollPointF.x;
-                downPointF.y = scrollPointF.y;
-                break;
+    private ActionWrapper onDown(MotionEvent motionEvent) {
+        downPointerId = motionEvent.getPointerId(motionEvent.getActionIndex());
+        lastX = motionEvent.getX();
+        lastY = motionEvent.getY();
+//                    drawView.transformEventCoordinateToCanvas(motionEvent, downPointF);
+        if (isPressScale(lastX, lastY)) {
+            startScaling();
+        } else if (isPressRotate(lastX, lastY)) {
+            startRotating();
+        } else if (isPressDelete(lastX, lastY)) {
+            startDeleting();
+        } else if (isInRect(lastX, lastY)) {
+            startTranslating();
+        } else {
+            // 既不在矩形内，也没有点击三个操作按钮
+            return null;
         }
+
+        return new ActionWrapper(false);
     }
 
-    private void onScrollEnd() {
-        DrawView drawView = getDrawView();
-        if (null == drawView)
-            return;
+    private ActionWrapper onScroll(MotionEvent motionEvent) {
+        float x = motionEvent.getX(), y = motionEvent.getY();
         switch (state) {
             case SCALING_STATE:
-                drawView.onChooseScaleEnd(chosenElements, scale, centerX(), centerY());
-                endScaling();
+                scaling(x, y);
                 break;
             case ROTATING_STATE:
-                drawView.onChooseRotateEnd(chosenElements, (float) Math.toDegrees(rotate), centerX(), centerY());
-                endRotating();
+                rotating(x, y);
                 break;
             case TRANSLATING_STATE:
-                drawView.onChooseTranslateEnd(chosenElements, dx, dy);
-                endTranslating();
-                break;
-            case DELETING_STATE:
-                ChooseGestureListener chooseGestureListener = chooseGestureListenerWeakReference.get();
-                if (null != chooseGestureListener)
-                    chooseGestureListener.onChosenElementsDelete();
-                endDeleting();
+                translating(x - lastX, y - lastY);
+                lastX = x;
+                lastY = y;
                 break;
         }
+        ActionWrapper result = new ActionWrapper(true);
+        return result;
+    }
+
+    private ActionWrapper onScrollEnd(MotionEvent motionEvent) {
+        ActionWrapper result = null;
+
+        if (state == TRANSLATING_STATE || state == ROTATING_STATE || state == SCALING_STATE) {
+            result = new ActionWrapper();
+            result.setAction(new TransformAction(chosenElements, getTransformMatrix()));
+            result.setNeedInvalidate(true);
+        } else if (state == DELETING_STATE && isPressDelete(motionEvent.getX(), motionEvent.getY())) {
+            for (BasicElement element : chosenElements)
+                element.cancelChosen();
+            result = new ActionWrapper();
+            result.setAction(new DeleteAction(chosenElements));
+            result.setNeedInvalidate(true);
+            result.setHoldOn(false);
+        }
+
+        state = IDLE_STATE;
+        initTransformMatrix();
+
+        return result;
+    }
+
+    private Matrix getTransformMatrix() {
+        Matrix matrix = new Matrix();
+        switch (state) {
+            case TRANSLATING_STATE:
+                matrix.postTranslate(dx, dy);
+                break;
+            case ROTATING_STATE:
+                matrix.postRotate((float) Math.toDegrees(rotate), getCenterX(), getCenterY());
+                break;
+            case SCALING_STATE:
+                matrix.postScale(scale, scale, getCenterX(), getCenterY());
+                break;
+        }
+        return matrix;
     }
 
     @Override
-    public void onCancel() {
+    public ActionWrapper onCancel() {
+        ActionWrapper result = new ActionWrapper();
+        result.setNeedInvalidate(true);
+        result.setHoldOn(false);
+
+        if (state == TRANSLATING_STATE || state == ROTATING_STATE || state == SCALING_STATE) {
+            result.setAction(new TransformAction(chosenElements, new Matrix(transformMatrix)));
+        }
         for (BasicElement element : chosenElements)
             element.cancelChosen();
-        state = NO_STATE;
+
+        initTransformMatrix();
+        state = IDLE_STATE;
+        return result;
     }
 
+    @Override
     public void onDraw(Canvas canvas) {
         Log.d(TAG, "draw: " + leftTop.x + " " + leftTop.y);
-        DrawView drawView = getDrawView();
-        if (null == drawView)
-            return;
-        int width = 100, height = 100;
 
-        Drawable deleteDrawable = drawView.getDeleteDrawable();
-        Drawable rotateDrawable = drawView.getRotateDrawable();
-        Drawable scaleDrawable = drawView.getScaleDrawable();
+        int width = 100, height = 100;
 
         // draw close icon at top-right.
 //        width = (int) (deleteDrawable.getIntrinsicWidth() / scale);
@@ -270,15 +371,15 @@ public class ChosenRegionGestureListener extends GestureListener {
     }
 
 //    @Override
-//    public void onCanvasScaleChanged(float scale, float oldScale) {
+//    public void onScaleChanged(float scale, float oldScale) {
 //
 //    }
 
-    public float centerX() {
+    public float getCenterX() {
         return center.x;
     }
 
-    public float centerY() {
+    public float getCenterY() {
         return center.y;
     }
 
@@ -300,9 +401,10 @@ public class ChosenRegionGestureListener extends GestureListener {
     }
 
     public boolean startScaling() {
-        if (NO_STATE == state) {
+        if (IDLE_STATE == state) {
             this.state = SCALING_STATE;
             this.scale = 1;
+            return true;
         }
         return false;
     }
@@ -312,8 +414,8 @@ public class ChosenRegionGestureListener extends GestureListener {
             Vector2D width = new Vector2D(leftTop, rightTop);
             Vector2D height = new Vector2D(leftTop, leftBottom);
 
-            float centerX = centerX();
-            float centerY = centerY();
+            float centerX = getCenterX();
+            float centerY = getCenterY();
 
             Vector2D offset = new Vector2D(x - centerX, y - centerY);
 
@@ -325,8 +427,7 @@ public class ChosenRegionGestureListener extends GestureListener {
             float scale = Math.abs(widthOffset) > Math.abs(heightOffset) ? widthOffset : heightOffset;
             this.scale *= scale;
 
-            Matrix matrix = new Matrix();
-            matrix.postScale(scale, scale, centerX, centerY);
+            transformMatrix.postScale(scale, scale, centerX, centerY);
 
             leftTop.x = centerX + (leftTop.x - centerX) * scale;
             leftTop.y = centerY + (leftTop.y - centerY) * scale;
@@ -337,28 +438,13 @@ public class ChosenRegionGestureListener extends GestureListener {
             leftBottom.x = centerX + (leftBottom.x - centerX) * scale;
             leftBottom.y = centerY + (leftBottom.y - centerY) * scale;
 
-            for (BasicElement element : chosenElements)
-                element.onTransform(matrix);
             return true;
         }
         return false;
-    }
-
-    public boolean endScaling() {
-        if (SCALING_STATE == state) {
-            this.scale = 1;
-            state = NO_STATE;
-            return true;
-        }
-        return false;
-    }
-
-    public float getScale() {
-        return this.scale;
     }
 
     public boolean startTranslating() {
-        if (NO_STATE == state) {
+        if (IDLE_STATE == state) {
             this.dx = 0;
             this.dy = 0;
             state = TRANSLATING_STATE;
@@ -369,8 +455,7 @@ public class ChosenRegionGestureListener extends GestureListener {
 
     public boolean translating(float dx, float dy) {
         if (TRANSLATING_STATE == state) {
-            Matrix matrix = new Matrix();
-            matrix.postTranslate(dx, dy);
+
             this.dx += dx;
             this.dy += dy;
 
@@ -389,42 +474,28 @@ public class ChosenRegionGestureListener extends GestureListener {
             center.x += dx;
             center.y += dy;
 
-            for (BasicElement element : chosenElements)
-                element.onTransform(matrix);
+            transformMatrix.postTranslate(dx, dy);
+
             return true;
         }
         return false;
-    }
-
-    public boolean endTranslating() {
-        if (TRANSLATING_STATE == state) {
-            this.dx = 0;
-            this.dy = 0;
-            state = NO_STATE;
-            return true;
-        }
-        return false;
-    }
-
-    public Pair<Float, Float> getOffset() {
-        return new Pair<Float, Float>(dx, dy);
     }
 
     public boolean startRotating() {
-        if (NO_STATE == state) {
+        if (IDLE_STATE == state) {
             this.rotate = 0;
             state = ROTATING_STATE;
         }
         return false;
     }
 
-    public boolean rotating(PointF pointF) {
+    public boolean rotating(float x, float y) {
         if (ROTATING_STATE == state) {
-            float centerX = centerX();
-            float centerY = centerY();
+            float centerX = getCenterX();
+            float centerY = getCenterY();
 
             Vector2D oldVector2D = new Vector2D(leftBottom.x - centerX, leftBottom.y - centerY);
-            Vector2D newVector2D = new Vector2D(pointF.x - centerX, pointF.y - centerY);
+            Vector2D newVector2D = new Vector2D(x - centerX, y - centerY);
             float rotate = newVector2D.getEdgeRotateAngle() - oldVector2D.getEdgeRotateAngle();
             this.rotate += rotate;
 
@@ -454,38 +525,16 @@ public class ChosenRegionGestureListener extends GestureListener {
             leftBottom.x = (float) (centerX + length * Math.cos(angle));
             leftBottom.y = (float) (centerY + length * Math.sin(angle));
 
-            Matrix matrix = new Matrix();
-            matrix.postRotate((float) Math.toDegrees(rotate), centerX, centerY);
-            for (BasicElement onTransformListener : chosenElements)
-                onTransformListener.onTransform(matrix);
+            transformMatrix.postRotate((float) Math.toDegrees(rotate), center.x, center.y);
+
             return true;
         }
         return false;
-    }
-
-    public boolean endRotating() {
-        if (ROTATING_STATE == state) {
-            this.rotate = 0;
-            this.state = NO_STATE;
-            return true;
-        }
-        return false;
-    }
-
-    public float getRotate() {
-        return this.rotate;
     }
 
     public boolean startDeleting() {
-        if (NO_STATE == state) {
+        if (IDLE_STATE == state) {
             state = DELETING_STATE;
-        }
-        return false;
-    }
-
-    public boolean endDeleting() {
-        if (DELETING_STATE == state) {
-            onCancel();
             return true;
         }
         return false;
@@ -495,15 +544,15 @@ public class ChosenRegionGestureListener extends GestureListener {
 //        return getIncludedAngle(start.x, start.y, center.x, center.y, end.x, end.y)
 //    }
 //
-//    private float getIncludedAngle(float startX, float startY, float centerX, float centerY, float endX, float endY) {
-//        double a = Math.sqrt(Math.pow(startX - centerX, 2) + Math.pow(startY - centerY, 2));
-//        double b = Math.sqrt(Math.pow(endX - centerX, 2) + Math.pow(endY - centerY, 2));
+//    private float getIncludedAngle(float startX, float startY, float getCenterX, float getCenterY, float endX, float endY) {
+//        double a = Math.sqrt(Math.pow(startX - getCenterX, 2) + Math.pow(startY - getCenterY, 2));
+//        double b = Math.sqrt(Math.pow(endX - getCenterX, 2) + Math.pow(endY - getCenterY, 2));
 //        double c = Math.sqrt(Math.pow(startX - endX, 2) + Math.pow(startY - endY, 2));
 //
-//        float x1 = startX - centerY;
-//        float y1 = startX - centerY;
-//        float x2 = endX - centerY;
-//        float y2 = endX - centerY;
+//        float x1 = startX - getCenterY;
+//        float y1 = startX - getCenterY;
+//        float x2 = endX - getCenterY;
+//        float y2 = endX - getCenterY;
 //
 //        if (x1 * y2 - x2 * y1 >= 0)
 //            return (float) Math.acos((a * a + b * b - c * c) / (2 * a * b));
@@ -525,8 +574,11 @@ public class ChosenRegionGestureListener extends GestureListener {
 
     public boolean isPressRotate(float x, float y) {
 //        int width = (int) (scaleDrawable.getIntrinsicWidth() / canvasScale);
+        Log.d(TAG, "isPressRotate: " + leftBottom.x + " " + leftBottom.y + " " + x + " " + y);
         int width = 100;
-        return (Math.pow(leftBottom.x - x, 2) + Math.pow(leftBottom.y - y, 2) <= Math.pow(width * 0.5, 2));
+        boolean result = (Math.pow(leftBottom.x - x, 2) + Math.pow(leftBottom.y - y, 2) <= Math.pow(width * 0.5, 2));
+        Log.d(TAG, "isPressRotate: " + result);
+        return result;
     }
 
     public List<BasicElement> getChosenElements() {

@@ -1,5 +1,6 @@
 package com.example.crazyflower.whiteboard.Action;
 
+import android.graphics.Matrix;
 import android.os.Parcel;
 
 import com.example.crazyflower.whiteboard.Element.BasicElement;
@@ -13,17 +14,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-public class DeleteAction extends Action {
+public class TransformAction extends Action {
 
-    private List<BasicElement> elements;
+    protected List<BasicElement> elements;
 
-    public DeleteAction(List<BasicElement> elements) {
-        super(Action.ACTION_DELETE);
+    protected Matrix matrix;
+
+    public TransformAction(List<BasicElement> elements, Matrix matrix) {
+        super(ACTION_TRANSFORM);
         this.elements = elements;
+        this.matrix = matrix;
     }
 
-    public DeleteAction(Parcel source, HashMap<UUID, BasicElement> hashMap) {
-        super(ACTION_DELETE, source);
+    public TransformAction(Parcel source, HashMap<UUID, BasicElement> hashMap) {
+        super(ACTION_TRANSFORM, source);
+        elements = new ArrayList<>();
 
         int count = source.readInt();
         BasicElement basicElement;
@@ -32,10 +37,16 @@ public class DeleteAction extends Action {
             if (basicElement != null)
                 elements.add(basicElement);
         }
+
+        float[] values = new float[9];
+        source.readFloatArray(values);
+        matrix = new Matrix();
+        matrix.setValues(values);
     }
 
-    public DeleteAction(JSONObject jsonObject, HashMap<UUID, BasicElement> hashMap) throws JSONException {
-        super(Action.ACTION_DELETE);
+    public TransformAction(JSONObject jsonObject, HashMap<UUID, BasicElement> hashMap) throws JSONException {
+        super(ACTION_TRANSFORM, jsonObject);
+
         elements = new ArrayList<>();
         JSONArray elementIDs = jsonObject.getJSONArray(JSON_ELEMENT_IDS);
         for (int i = 0, length = elementIDs.length(); i < length; i++)
@@ -44,12 +55,16 @@ public class DeleteAction extends Action {
 
     @Override
     public void redo(List<BasicElement> basicElements) {
-        basicElements.removeAll(elements);
+        for (BasicElement element : elements)
+            element.onTransform(matrix);
     }
 
     @Override
     public void undo(List<BasicElement> basicElements) {
-        basicElements.addAll(elements);
+        Matrix invertMatrix = new Matrix();
+        matrix.invert(invertMatrix);
+        for (BasicElement element : elements)
+            element.onTransform(invertMatrix);
     }
 
     @Override
@@ -60,6 +75,13 @@ public class DeleteAction extends Action {
         for (BasicElement element : elements)
             elementIds.put(element.getUuid().toString());
         jsonObject.put(JSON_ELEMENT_IDS, elementIds);
+
+        float[] values = new float[9];
+        matrix.getValues(values);
+        JSONArray matrixValues = new JSONArray();
+        for (float value : values)
+            matrixValues.put(value);
+        jsonObject.put(JSON_MATRIX_VALUES, matrixValues);
     }
 
     @Override
@@ -69,5 +91,9 @@ public class DeleteAction extends Action {
         dest.writeInt(elements.size());
         for (BasicElement element : elements)
             dest.writeString(element.getUuid().toString());
+
+        float[] values = new float[9];
+        matrix.getValues(values);
+        dest.writeFloatArray(values);
     }
 }

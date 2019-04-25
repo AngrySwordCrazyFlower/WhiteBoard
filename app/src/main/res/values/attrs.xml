@@ -5,4 +5,6 @@
         <attr name="minMargin" format="dimension" />
     </declare-styleable>
 
+    <dimen name="activity_title_size">27sp</dimen>
+
 </resources>

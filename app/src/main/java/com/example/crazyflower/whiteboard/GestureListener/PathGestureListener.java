@@ -1,18 +1,27 @@
 package com.example.crazyflower.whiteboard.GestureListener;
 
+import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Path;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.PointF;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import com.example.crazyflower.whiteboard.Action.NewAction;
 import com.example.crazyflower.whiteboard.DrawView;
+import com.example.crazyflower.whiteboard.DrawViewUtil;
+import com.example.crazyflower.whiteboard.Element.BasicElement;
+import com.example.crazyflower.whiteboard.Element.PathElement;
+import com.example.crazyflower.whiteboard.ParcelablePath;
+
+import java.util.List;
 
 public class PathGestureListener extends GestureListener {
 
     private static final String TAG = "PathGestureListener";
 
-    private Path path;
+    private ParcelablePath parcelablePath;
 
     private int downPointerId;
 
@@ -20,86 +29,82 @@ public class PathGestureListener extends GestureListener {
 
     private int state;
 
-    private static final int NO_STATE = 0;
+    private Paint paint;
+
+    private static final int IDLE_STATE = 0;
     private static final int DOWN_STATE = 1;
     private static final int MOVE_STATE = 2;
 
-    public PathGestureListener(DrawView drawView) {
-        super(drawView);
-        path = new Path();
+    public PathGestureListener(Context context, Paint paint) {
+        super(context);
+        parcelablePath = new ParcelablePath();
         pointF = new PointF();
-        state = NO_STATE;
+        state = IDLE_STATE;
+        this.paint = paint;
     }
 
     @Override
     public void onDraw(Canvas canvas) {
-        DrawView drawView = drawViewWeakReference.get();
-        if (null == drawView)
-            return;
         if (MOVE_STATE == state) {
-            canvas.drawPath(path, drawView.getPathPaint());
+            canvas.drawPath(parcelablePath.getPath(), paint);
         }
     }
 
-    public boolean onTouch(MotionEvent motionEvent) {
-        DrawView drawView = drawViewWeakReference.get();
-        if (null == drawView)
-            return false;
+    @Override
+    public ActionWrapper onTouch(List<BasicElement> elements, MotionEvent motionEvent, Matrix matrix) {
 //        Log.d(TAG, "onTouch: " + motionEvent.getActionMasked());
-        boolean result = false;
+        ActionWrapper result = new ActionWrapper();
+
+        pointF.x = motionEvent.getX();
+        pointF.y = motionEvent.getY();
+        DrawViewUtil.transformPoint(pointF, matrix);
+
         switch (motionEvent.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
-                if (NO_STATE == state) {
-                    drawView.transformEventCoordinateToCanvas(motionEvent, pointF);
-                    path.reset();
-                    path.moveTo(pointF.x, pointF.y);
+                if (IDLE_STATE == state) {
+                    parcelablePath.reset();
+                    parcelablePath.moveTo(pointF.x, pointF.y);
                     state = DOWN_STATE;
                     downPointerId = motionEvent.getPointerId(motionEvent.getActionIndex());
-                    result = true;
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (downPointerId == motionEvent.getPointerId(motionEvent.getActionIndex())) {
-                    if (NO_STATE != state) {
-                        state = MOVE_STATE;
-                        drawView.transformEventCoordinateToCanvas(motionEvent, pointF);
-                        onScroll();
-                        result = true;
-                        drawView.invalidate();
-                    }
+                    onScroll(result);
                 }
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
                 if (downPointerId == motionEvent.getPointerId(motionEvent.getActionIndex())) {
-                    if (MOVE_STATE == state) {
-                        state = NO_STATE;
-                        drawView.onPathEnd(path);
-                        result = true;
-                    } else if (DOWN_STATE == state) {
-                        state = NO_STATE;
-                        result = true;
-                    }
+                    if (MOVE_STATE == state)
+                        onPathEnd(result);
+                    else if (DOWN_STATE == state)
+                        state = IDLE_STATE;
                 }
                 break;
         }
         return result;
     }
 
-    private void onScroll() {
-        Log.d(TAG, "onScroll: ");
-        path.lineTo(pointF.x, pointF.y);
+    private void onScroll(ActionWrapper actionWrapper) {
+        Log.d(TAG, "onScroll: " + pointF.x + " " + pointF.y);
+        state = MOVE_STATE;
+        parcelablePath.lineTo(pointF.x, pointF.y);
+        actionWrapper.setNeedInvalidate(true);
     }
 
     @Override
-    public void onCancel() {
-        DrawView drawView = drawViewWeakReference.get();
-        if (null == drawView)
-            return;
-        if (NO_STATE != state) {
-            drawView.onPathEnd(path);
-            state = NO_STATE;
-        }
+    public ActionWrapper onCancel() {
+        ActionWrapper result = new ActionWrapper();
+        if (state == MOVE_STATE)
+            onPathEnd(result);
+        return result;
+    }
+
+    private void onPathEnd(ActionWrapper actionWrapper) {
+        actionWrapper.setAction(new NewAction(new PathElement(new ParcelablePath(parcelablePath), new Paint(paint))));
+        actionWrapper.setNeedInvalidate(true);
+        state = IDLE_STATE;
     }
 
 }

@@ -1,319 +1,178 @@
 package com.example.crazyflower.whiteboard;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
-import android.net.Uri;
-import android.provider.MediaStore;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
+import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
+import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, DragHelperView.DragHelperViewListener {
+import com.example.crazyflower.whiteboard.Action.ActionHistoryManager;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    DrawView drawView;
 
-    ImageView iconPaint;
-    ImageView iconChoose;
-    ImageView iconRegion;
-    ImageView iconScaleTranslating;
-    ImageView iconActionBack;
-    ImageView iconActionGo;
-    ImageView iconPicturePick;
+    private AppBarLayout appBarLayout;
 
-    DragHelperView dragHelperView;
+    private TextView titleTextView;
 
-    private static final int PICK_LOCAL_PICTURE_REQUEST_CODE = 1000;
-    private static final int CLIP_PICTURE_REQUEST_CODE = 1001;
+    DrawViewRecyclerAdapter drawViewRecyclerAdapter;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
-        iconPicturePick = findViewById(R.id.picture_pick);
+//        DrawViewInfoManager drawViewInfoManager = DrawViewInfoManager.getInstance();
+        File folder = getFilesDir(), infoFile;
+        ActionHistoryManager actionHistoryManager;
+        drawViewRecyclerAdapter = new DrawViewRecyclerAdapter();
+        RecyclerView recyclerView = ((RecyclerView) findViewById(R.id.draw_view_items));
+        recyclerView.setAdapter(drawViewRecyclerAdapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        drawView = (DrawView) findViewById(R.id.board);
-        iconPaint = findViewById(R.id.mode_paint);
-        iconChoose = findViewById(R.id.mode_choose);
-        iconRegion = findViewById(R.id.mode_region);
-        iconScaleTranslating = findViewById(R.id.mode_scale_translate);
-        iconActionBack = findViewById(R.id.action_back);
-        iconActionGo = findViewById(R.id.action_go);
-        dragHelperView = findViewById(R.id.drag_helper);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        iconPaint.setOnClickListener(this);
-        iconChoose.setOnClickListener(this);
-        iconRegion.setOnClickListener(this);
-        iconScaleTranslating.setOnClickListener(this);
-        iconActionBack.setOnClickListener(this);
-        iconActionGo.setOnClickListener(this);
-        dragHelperView.setDragHelperViewListener(this);
-        iconPicturePick.setOnClickListener(this);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        iconPaint.setOnClickListener(null);
-        iconChoose.setOnClickListener(null);
-        iconRegion.setOnClickListener(null);
-        iconScaleTranslating.setOnClickListener(null);
-        iconActionBack.setOnClickListener(null);
-        iconActionGo.setOnClickListener(null);
-        iconPicturePick.setOnClickListener(null);
-        dragHelperView.setDragHelperViewListener(null);
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.mode_region:
-                drawView.setMode(DrawView.REGION_MODE);
-                iconPaint.setActivated(false);
-                iconChoose.setActivated(false);
-                iconRegion.setActivated(true);
-                iconScaleTranslating.setActivated(false);
-                break;
-            case R.id.mode_paint:
-                if (DrawView.PAINT_MODE == drawView.getMode()) {
-                    new PaintChoosePopupWindow().show();
+        JSONObject info;
+        String title;
+        long lastChangeTime;
+        for (String s : folder.list()) {
+            try {
+                infoFile = new File(folder.getPath() + File.separator + s + File.separator + "info.json");
+                if (infoFile.exists()) {
+                    BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(infoFile));
+                    StringBuilder infoFromFile = new StringBuilder();
+                    byte[] bytes = new byte[1024];
+                    int length;
+                    while ((length = bufferedInputStream.read(bytes)) != -1) {
+                        infoFromFile.append(Charset.forName("UTF-8").decode(ByteBuffer.wrap(bytes, 0, length)));
+                    }
+                    info = new JSONObject(infoFromFile.toString());
+                    actionHistoryManager = ActionHistoryManager.generateByActionJSONArray(info.getJSONArray("actions"));
+                    Log.d(TAG, "onCreate: " + actionHistoryManager.getActionJSONArray());
+                    title = info.getString("title");
+                    lastChangeTime = infoFile.lastModified();
+                    drawViewRecyclerAdapter.addItem(new DrawViewInfo(s, title, lastChangeTime, actionHistoryManager));
                 } else {
-                    drawView.setMode(DrawView.PAINT_MODE);
-                    iconPaint.setActivated(true);
-                    iconChoose.setActivated(false);
-                    iconRegion.setActivated(false);
-                    iconScaleTranslating.setActivated(false);
+
                 }
-                break;
-            case R.id.mode_choose:
-                drawView.setMode(DrawView.CHOOSE_MODE);
-                iconPaint.setActivated(false);
-                iconChoose.setActivated(true);
-                iconRegion.setActivated(false);
-                iconScaleTranslating.setActivated(false);
-                break;
-            case R.id.picture_pick:
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_PICK);
-                intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
-                startActivityForResult(intent, PICK_LOCAL_PICTURE_REQUEST_CODE);
-                break;
-            case R.id.mode_scale_translate:
-                drawView.setMode(DrawView.SCALE_TRANSLATING_MODE);
-                iconPaint.setActivated(false);
-                iconChoose.setActivated(false);
-                iconRegion.setActivated(false);
-                iconScaleTranslating.setActivated(true);
-                break;
-            case R.id.action_back:
-                drawView.undo();
-                break;
-            case R.id.action_go:
-                drawView.redo();
-                break;
-        }
-    }
-
-    @Override
-    public void onMove(float dx, float dy) {
-        if (null != drawView)
-            drawView.onCanvasTranslate(dx, dy);
-    }
-
-    private class PaintChoosePopupWindow implements View.OnClickListener, MySeekBar.OnSeekBarProgressListener, PopupWindow.OnDismissListener {
-
-        LinearLayout contentView;
-        PopupWindow popupWindow;
-
-        PaintChoosePopupWindow() {
-            Activity outer = MainActivity.this;
-            contentView = (LinearLayout) outer.getLayoutInflater().inflate(R.layout.popupwindow_paint_choose, (ViewGroup) outer.getWindow().getDecorView(), false);
-
-            MySeekBar mySeekBar = contentView.findViewById(R.id.line_weight_seek_bar);
-            mySeekBar.setProgress((drawView.getPathStrokeWidth() - DrawViewUtil.PAINT_MIN_STROKE_WIDTH) / (DrawViewUtil.PAINT_MAX_STROKE_WIDTH - DrawViewUtil.PAINT_MIN_STROKE_WIDTH) * 100);
-            mySeekBar.setColor(drawView.getPathColor());
-            mySeekBar.setOnSeekBarProgressListener(this);
-
-            contentView.findViewById(R.id.line_color_aqua).setOnClickListener(this);
-            contentView.findViewById(R.id.line_color_black).setOnClickListener(this);
-            contentView.findViewById(R.id.line_color_blue).setOnClickListener(this);
-            contentView.findViewById(R.id.line_color_green).setOnClickListener(this);
-            contentView.findViewById(R.id.line_color_purple).setOnClickListener(this);
-            contentView.findViewById(R.id.line_color_red).setOnClickListener(this);
-            contentView.findViewById(R.id.line_color_white).setOnClickListener(this);
-            contentView.findViewById(R.id.line_color_yellow).setOnClickListener(this);
-
-            View view = contentView.findViewById(R.id.line_weight_show);
-            ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-            layoutParams.height = (int) (DrawViewUtil.PAINT_MIN_STROKE_WIDTH + (DrawViewUtil.PAINT_MAX_STROKE_WIDTH - DrawViewUtil.PAINT_MIN_STROKE_WIDTH) * mySeekBar.getProgress() * 0.01f);
-            view.setLayoutParams(layoutParams);
-            GradientDrawable background = (GradientDrawable) view.getBackground();
-            background.setColor(drawView.getPathColor());
-
-            popupWindow = new PopupWindow(contentView, WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
-            popupWindow.setClippingEnabled(false);
-            popupWindow.setBackgroundDrawable(null);
-            popupWindow.setFocusable(true);
-            popupWindow.setTouchable(true);
-            popupWindow.setOutsideTouchable(false);
-
-            popupWindow.setOnDismissListener(this);
-
-        }
-
-
-        @Override
-        public void onClick(View v) {
-            View view = contentView.findViewById(R.id.line_weight_show);
-            GradientDrawable background = (GradientDrawable) view.getBackground();
-            switch (v.getId()) {
-                case R.id.line_color_aqua:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(0, 255, 255));
-                    background.setColor(Color.rgb(0, 255, 255));
-                    break;
-                case R.id.line_color_black:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(0, 0, 0));
-                    background.setColor(Color.rgb(0, 0, 0));
-                    break;
-                case R.id.line_color_blue:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(0, 0, 255));
-                    background.setColor(Color.rgb(0, 0, 255));
-                    break;
-                case R.id.line_color_green:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(0, 255, 0));
-                    background.setColor(Color.rgb(0, 255, 0));
-                    break;
-                case R.id.line_color_purple:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(255, 0, 255));
-                    background.setColor(Color.rgb(255, 0, 255));
-                    break;
-                case R.id.line_color_red:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(255, 0, 0));
-                    background.setColor(Color.rgb(255, 0, 0));
-                    break;
-                case R.id.line_color_white:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(255, 255, 255));
-                    background.setColor(Color.rgb(255, 255, 255));
-                    break;
-                case R.id.line_color_yellow:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(255, 255, 0));
-                    background.setColor(Color.rgb(255, 255, 0));
-                    break;
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
+        info = null;
+        title = null;
+        actionHistoryManager = null;
 
-        @Override
-        public void onSeekBarProgressChanged(MySeekBar mySeekBar) {
-            Log.d(TAG, "onSeekBarProgressChanged: ");
-            View view = contentView.findViewById(R.id.line_weight_show);
-            ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-            layoutParams.height = (int) (DrawViewUtil.PAINT_MIN_STROKE_WIDTH + (DrawViewUtil.PAINT_MAX_STROKE_WIDTH - DrawViewUtil.PAINT_MIN_STROKE_WIDTH) * mySeekBar.getProgress() * 0.01f);
-            view.setLayoutParams(layoutParams);
-            drawView.setPathColor(mySeekBar.getColor());
-        }
+        drawViewRecyclerAdapter.setRecyclerViewItemChildViewClickListener(new RecyclerViewItemChildViewClickListener() {
+            @Override
+            public void onChildViewClick(View view, int adapterPosition) {
+                Log.d(TAG, "onChildViewClick: " + view.getId());
+                switch (view.getId()) {
+                    case R.id.draw_view_item_container:
+                        Log.d(TAG, "onChildViewClick: " + adapterPosition);
+                        Intent intent = new Intent(MainActivity.this, DrawActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putParcelable(DrawActivity.DRAW_VIEW_INFO, drawViewRecyclerAdapter.getData().get(adapterPosition));
+                        intent.putExtra(DrawActivity.DRAW_VIEW_INFO, bundle);
+                        startActivityForResult(intent, DrawActivity.DRAW_REQUEST_CODE);
+                        break;
+                }
+            }
+        });
 
-        @Override
-        public void onDismiss() {
-            MySeekBar mySeekBar = (MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar);
-            drawView.setPathColor(mySeekBar.getColor());
-            drawView.setPathStrokeWidth(DrawViewUtil.PAINT_MIN_STROKE_WIDTH + (DrawViewUtil.PAINT_MAX_STROKE_WIDTH - DrawViewUtil.PAINT_MIN_STROKE_WIDTH) * mySeekBar.getProgress() * 0.01f);
-        }
+//        recyclerView.addOnItemTouchListener(new DrawViewRecyclerAdapter.DrawViewRVItemTouchListener());
+//        recyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+//            private static final String TAG = "OnItemTouchListener";
+//
+//            @Override
+//            public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+////                View view = rv.findChildViewUnder(e.getX(), e.getY());
+////                if (null == view)
+////                    return false;
+////                Log.d(TAG, "onInterceptTouchEvent: " + e.getAction() + " " + rv.getChildAdapterPosition(view));
+//                Log.d(TAG, "onInterceptTouchEvent: " + e.getAction());
+//                boolean result;
+//                switch (e.getAction()) {
+//                    case MotionEvent.ACTION_DOWN:
+//                        result = false;
+//                        break;
+//                    case MotionEvent.ACTION_MOVE:
+//                        result = false;
+//                        break;
+//                    default:
+//                        result = false;
+//                        break;
+//                }
+//                return result;
+//            }
+//
+//            @Override
+//            public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+//                Log.d(TAG, "onTouchEvent: " + e.getAction());
+//            }
+//
+//            @Override
+//            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+//
+//            }
+//        });
 
-        public void show() {
-            int[] outLocation = new int[2];
-            drawView.getLocationInWindow(outLocation);
+        appBarLayout = ((AppBarLayout) findViewById(R.id.app_bar));
+        titleTextView = (TextView) findViewById(R.id.activity_title);
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+            @Override
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                titleTextView.setAlpha(1 + verticalOffset / (float) appBarLayout.getTotalScrollRange());
+            }
+        });
 
-            DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-            contentView.measure(View.MeasureSpec.makeMeasureSpec(displayMetrics.widthPixels, View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(displayMetrics.heightPixels, View.MeasureSpec.AT_MOST));
-
-            popupWindow.showAtLocation(drawView, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, drawView.getHeight() - contentView.getMeasuredHeight() + outLocation[1]);
-        }
-
+        findViewById(R.id.add_draw_view).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String folderName = String.valueOf(createFolder());
+                Intent intent = new Intent(MainActivity.this, DrawActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putParcelable(DrawActivity.DRAW_VIEW_INFO, new DrawViewInfo(folderName));
+                intent.putExtra(DrawActivity.DRAW_VIEW_INFO, bundle);
+                startActivityForResult(intent, DrawActivity.DRAW_REQUEST_CODE);
+            }
+        });
 
     }
 
-    /**
-     * 抄的，是针对Android 7.0以上的
-     * @param requestCode
-     * @param resultCode
-     * @param data
-     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_CANCELED)
-            return;
-        switch (requestCode) {
-            case PICK_LOCAL_PICTURE_REQUEST_CODE:
-                if (null != data) {
-                    cropPic(data.getData());
-                }
-                break;
-            case CLIP_PICTURE_REQUEST_CODE:
-                // 裁剪时,这样设置 cropIntent.putExtra("return-data", true); 处理方案如下
-                if (data != null) {
-                    Bundle bundle = data.getExtras();
-                    if (bundle != null) {
-                        Bitmap bitmap = bundle.getParcelable("data");
-                        drawView.addBitmapElement(bitmap);
-                    }
-                }
-                break;
+        Log.d(TAG, "onActivityResult: " + requestCode + " " + resultCode + " " + (data == null));
+        if (resultCode == RESULT_OK && data != null) {
+            drawViewRecyclerAdapter.updateItem((DrawViewInfo) data.getParcelableExtra(DrawActivity.DRAW_VIEW_INFO));
         }
     }
 
-    /**
-     * 抄的，是针对Android 7.0以上的
-     * @param data
-     */
-    private void cropPic(Uri data) {
-        if (data == null) {
-            return;
-        }
-        Intent cropIntent = new Intent("com.android.camera.action.CROP");
-        cropIntent.setDataAndType(data, "image/*");
-
-        // 开启裁剪：打开的Intent所显示的View可裁剪
-        cropIntent.putExtra("crop", "true");
-        // 裁剪宽高比
-        cropIntent.putExtra("aspectX", 1);
-        cropIntent.putExtra("aspectY", 1);
-        // 裁剪输出大小
-        cropIntent.putExtra("outputX", 320);
-        cropIntent.putExtra("outputY", 320);
-        cropIntent.putExtra("scale", true);
-        /**
-         * return-data
-         * 这个属性决定我们在 onActivityResult 中接收到的是什么数据，
-         * 如果设置为true 那么data将会返回一个bitmap
-         * 如果设置为false，则会将图片保存到本地并将对应的uri返回，当然这个uri得有我们自己设定。
-         * 系统裁剪完成后将会将裁剪完成的图片保存在我们所这设定这个uri地址上。我们只需要在裁剪完成后直接调用该uri来设置图片，就可以了。
-         */
-        cropIntent.putExtra("return-data", true);
-        // 当 return-data 为 false 的时候需要设置这句
-//        cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-        // 图片输出格式
-//        cropIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
-        // 头像识别 会启动系统的拍照时人脸识别
-//        cropIntent.putExtra("noFaceDetection", true);
-        startActivityForResult(cropIntent, CLIP_PICTURE_REQUEST_CODE);
+    private long createFolder() {
+        File file;
+        long time;
+        do {
+            time = System.currentTimeMillis();
+            file = new File(getFilesDir().getPath() + File.separator + time);
+        } while (!file.mkdirs());
+        return time;
     }
-
-
 }

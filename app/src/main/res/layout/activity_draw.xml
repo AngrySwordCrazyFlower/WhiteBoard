@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:DragHelperView="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:fitsSystemWindows="true"
+    android:background="#FFFFFF"
+    tools:context=".DrawActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="10">
+
+        <com.example.crazyflower.whiteboard.DrawView
+            android:id="@+id/board"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.example.crazyflower.whiteboard.DragHelperView
+            android:id="@+id/drag_helper"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/ic_drag_helper_background"
+            android:stateListAnimator="@animator/drag_helper_background"
+            android:src="@drawable/ic_drag_helper"
+            DragHelperView:minMargin="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
+            android:elevation="20dp" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/mode_paint"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@drawable/main_ac_icon_ripple_background"
+            android:src="@drawable/main_ac_icon_paint_src"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/picture_pick"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@drawable/main_ac_icon_ripple_background"
+            android:src="@drawable/main_ac_icon_picture_src"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:scaleType="fitCenter"/>
+
+        <ImageView
+            android:id="@+id/mode_choose"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@drawable/main_ac_icon_ripple_background"
+            android:src="@drawable/main_ac_icon_pointer_src"
+            android:layout_gravity="center"
+            android:padding="3dp"
+            android:scaleType="fitCenter"/>
+
+        <ImageView
+            android:id="@+id/mode_scale_translate"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@drawable/main_ac_icon_ripple_background"
+            android:src="@drawable/main_ac_icon_zoom_src"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:scaleType="fitCenter"/>
+
+        <ImageView
+            android:id="@+id/action_back"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@drawable/main_ac_icon_ripple_background"
+            android:src="@drawable/main_ac_icon_back_src"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:scaleType="fitCenter"/>
+
+        <ImageView
+            android:id="@+id/action_go"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@drawable/main_ac_icon_ripple_background"
+            android:src="@drawable/main_ac_icon_go_src"
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:scaleType="fitCenter"/>
+
+    </LinearLayout>
+
+</LinearLayout>
