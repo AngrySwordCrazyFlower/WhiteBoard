@@ -10,6 +10,7 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -27,6 +28,10 @@ public abstract class BasicElement implements Parcelable {
     protected UUID uuid;
 
     protected int type;
+
+    public static final String JSON_ID = "id";
+
+    public static final String JSON_TYPE = "type";
 
     BasicElement(int type) {
         this(type, UUID.randomUUID());
@@ -89,7 +94,12 @@ public abstract class BasicElement implements Parcelable {
 
     public abstract void onTransform(Matrix matrix);
 
-    public abstract JSONObject toJSONObject() throws JSONException;
+//    public abstract JSONObject toJSONObject(File file) throws JSONException;
+
+    public void writeToJSONObject(JSONObject jsonObject, File file) throws JSONException {
+        jsonObject.put(JSON_ID, uuid.toString());
+        jsonObject.put(JSON_TYPE, type);
+    }
 
     public static final Creator<BasicElement> CREATOR = new Creator<BasicElement>() {
 
@@ -101,6 +111,8 @@ public abstract class BasicElement implements Parcelable {
             switch (type) {
                 case ElementUtil.PATH_ELEMENT:
                     return new PathElement(in);
+                case ElementUtil.BITMAP_ELEMENT:
+                    return new BitmapElement(in);
             }
             return null;
         }

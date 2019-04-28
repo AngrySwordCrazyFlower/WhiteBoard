@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,8 +54,8 @@ public class DeleteAction extends Action {
     }
 
     @Override
-    public void writeToJSONObject(JSONObject jsonObject) throws JSONException {
-        super.writeToJSONObject(jsonObject);
+    public void writeToJSONObject(JSONObject jsonObject, File file) throws JSONException {
+        super.writeToJSONObject(jsonObject, file);
 
         JSONArray elementIds = new JSONArray();
         for (BasicElement element : elements)

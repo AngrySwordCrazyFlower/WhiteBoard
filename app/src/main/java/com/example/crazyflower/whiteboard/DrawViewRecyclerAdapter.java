@@ -48,13 +48,15 @@ public class DrawViewRecyclerAdapter extends RecyclerView.Adapter<DrawViewRecycl
         DrawViewInfo drawViewInfo = drawViewInfos.get(position);
         holder.drawView.setActionHistoryManager(drawViewInfo.actionHistoryManager);
         holder.titleTextView.setText(drawViewInfo.title);
-        holder.lastModifiedTextView.setText(dateFormat.format(new Date(drawViewInfo.lastChangeTime)));
+        holder.lastModifiedTextView.setText(dateFormat.format(new Date(drawViewInfo.actionHistoryManager.getLastChangeTime())));
+
         holder.container.setTag(position);
         holder.container.setOnClickListener(this);
         holder.titleTextView.setTag(position);
         holder.titleTextView.setOnClickListener(this);
         holder.moreDetailImageView.setTag(position);
         holder.moreDetailImageView.setOnClickListener(this);
+        holder.drawView.setOnTouchListener(null);
     }
 
     @Override
@@ -160,13 +162,8 @@ public class DrawViewRecyclerAdapter extends RecyclerView.Adapter<DrawViewRecycl
     }
 
     public void addItem(DrawViewInfo drawViewInfo) {
-        drawViewInfos.add(drawViewInfo);
-        try {
-            Log.d(TAG, "addItem: " + drawViewInfo.folderName + " " + drawViewInfo.getActionHistoryManager().getActionJSONArray().toString() + " " + drawViewInfo.title);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        notifyItemInserted(drawViewInfos.size() - 1);
+        drawViewInfos.add(0, drawViewInfo);
+        notifyItemInserted(0);
     }
 
 }

@@ -14,8 +14,10 @@ import android.view.View;
 
 import com.example.crazyflower.whiteboard.Action.ActionHistoryManager;
 
+import com.example.crazyflower.whiteboard.Action.NewAction;
 import com.example.crazyflower.whiteboard.Element.BasicElement;
 
+import com.example.crazyflower.whiteboard.Element.BitmapElement;
 import com.example.crazyflower.whiteboard.GestureListener.ActionWrapper;
 import com.example.crazyflower.whiteboard.GestureListener.ChooseGestureListener;
 import com.example.crazyflower.whiteboard.GestureListener.GestureListener;
@@ -237,7 +239,8 @@ public class DrawView extends View implements View.OnTouchListener {
     }
 
     public void redo() {
-        gestureListener.onCancel();
+        if (gestureListener != null)
+            gestureListener.onCancel();
         actionHistoryManager.redo();
         invalidate();
     }
@@ -288,8 +291,8 @@ public class DrawView extends View implements View.OnTouchListener {
     public void addBitmapElement(Bitmap bitmap) {
 //        BasicElement element = new BitmapElement(bitmap);
 //        elements.add(element);
-//        actionHistoryManager.addAction(new NewAction(element));
-//        invalidate();
+        actionHistoryManager.addAction(new NewAction(new BitmapElement(bitmap)));
+        invalidate();
     }
 
 

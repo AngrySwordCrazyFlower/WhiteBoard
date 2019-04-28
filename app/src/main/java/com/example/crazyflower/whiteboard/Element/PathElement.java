@@ -16,6 +16,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.UUID;
 
 public class PathElement extends BasicElement {
@@ -81,17 +82,25 @@ public class PathElement extends BasicElement {
         parcelablePath.transform(matrix);
     }
 
+//    @Override
+//    public JSONObject toJSONObject(File file) throws JSONException {
+//        JSONObject result = new JSONObject();
+//
+//        result.put("type", super.type);
+//        result.put("id", uuid.toString());
+//        result.put("path", parcelablePath.toJSONArray());
+//        result.put("color", paint.getColor());
+//        result.put("stoke_width", paint.getStrokeWidth());
+//
+//        return result;
+//    }
+
     @Override
-    public JSONObject toJSONObject() throws JSONException {
-        JSONObject result = new JSONObject();
-
-        result.put("type", super.type);
-        result.put("id", uuid.toString());
-        result.put("path", parcelablePath.toJSONArray());
-        result.put("color", paint.getColor());
-        result.put("stoke_width", paint.getStrokeWidth());
-
-        return result;
+    public void writeToJSONObject(JSONObject jsonObject, File file) throws JSONException {
+        super.writeToJSONObject(jsonObject, file);
+        jsonObject.put("path", parcelablePath.toJSONArray());
+        jsonObject.put("color", paint.getColor());
+        jsonObject.put("stoke_width", paint.getStrokeWidth());
     }
 
     @Override

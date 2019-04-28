@@ -30,7 +30,7 @@ public class ParcelablePath implements Parcelable {
 
     public ParcelablePath(ParcelablePath parcelablePath) {
         path = new Path(parcelablePath.getPath());
-        pointFs = parcelablePath.pointFs;
+        pointFs = new ArrayList<>(parcelablePath.pointFs);
     }
 
     public ParcelablePath(JSONArray jsonArray) {

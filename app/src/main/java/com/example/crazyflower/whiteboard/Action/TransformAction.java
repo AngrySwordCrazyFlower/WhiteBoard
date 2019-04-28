@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +52,17 @@ public class TransformAction extends Action {
         JSONArray elementIDs = jsonObject.getJSONArray(JSON_ELEMENT_IDS);
         for (int i = 0, length = elementIDs.length(); i < length; i++)
             elements.add(hashMap.get(UUID.fromString(elementIDs.getString(i))));
+
+        JSONArray matrixValueArray = jsonObject.getJSONArray(JSON_MATRIX_VALUES);
+        if (matrixValueArray.length() != 9)
+            matrix = new Matrix();
+        else {
+            float[] values = new float[9];
+            for (int i = 0; i < 9; i++)
+                values[i] = (float) matrixValueArray.getDouble(i);
+            matrix = new Matrix();
+            matrix.setValues(values);
+        }
     }
 
     @Override
@@ -68,8 +80,8 @@ public class TransformAction extends Action {
     }
 
     @Override
-    public void writeToJSONObject(JSONObject jsonObject) throws JSONException {
-        super.writeToJSONObject(jsonObject);
+    public void writeToJSONObject(JSONObject jsonObject, File file) throws JSONException {
+        super.writeToJSONObject(jsonObject, file);
 
         JSONArray elementIds = new JSONArray();
         for (BasicElement element : elements)

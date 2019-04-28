@@ -19,28 +19,22 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
-import com.example.crazyflower.whiteboard.Action.ActionHistoryManager;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 public class DrawActivity extends AppCompatActivity implements View.OnClickListener, DragHelperView.DragHelperViewListener {
 
     private static final String TAG = "DrawActivity";
 
     public static final int DRAW_REQUEST_CODE = 15;
+
+    public static final int ADD_DRAW_REQUEST_CODE = 16;
 
     public static final String DRAW_VIEW_INFO = "draw_view_info";
 
@@ -77,16 +71,18 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
         iconActionGo = findViewById(R.id.action_go);
         dragHelperView = findViewById(R.id.drag_helper);
 
-//        Intent intent = getIntent();
-//        Bundle bundle = intent.getBundleExtra(DrawActivity.DRAW_VIEW_INFO);
-//        if (bundle == null)
-//            finish();
-//        drawViewInfo = bundle.getParcelable(DRAW_VIEW_INFO);
-//        if (null == drawViewInfo)
-//            finish();
-//        drawView.setActionHistoryManager(drawViewInfo.getActionHistoryManager());
-
-        drawView.setActionHistoryManager(new ActionHistoryManager());
+        Intent intent = getIntent();
+        Bundle bundle = intent.getBundleExtra(DrawActivity.DRAW_VIEW_INFO);
+        if (bundle == null)
+            finish();
+        else {
+            drawViewInfo = bundle.getParcelable(DRAW_VIEW_INFO);
+            if (null == drawViewInfo)
+                finish();
+            else
+                drawView.setActionHistoryManager(drawViewInfo.getActionHistoryManager());
+        }
+//        drawView.setActionHistoryManager(new ActionHistoryManager());
 
     }
 
@@ -137,42 +133,10 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void saveToFile() {
-        Log.d(TAG, "saveToFile: ");
-        if (!drawViewInfo.getActionHistoryManager().isChanged()) {
-            return;
-        }
-        try {
-            File file = new File(getFilesDir().getPath() + File.separator + "201904201008000");
-            if (!file.exists())
-                if (!file.mkdirs())
-                    throw new IOException("Can't create file");
-            file = new File(file.getPath() + File.separator + "info.json");
-            if (!file.exists()) {
-                if (!file.createNewFile()) {
-                    throw new IOException("Can't create file");
-                }
-            }
-            JSONObject info = new JSONObject();
-            info.put("actions", drawView.getActionHistoryManager().getActionJSONArray());
-            info.put("title", "无名");
-
-            Log.d(TAG, "saveToFile: " + info.toString());
-
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
-            bufferedWriter.write(info.toString());
-            bufferedWriter.flush();
-            bufferedWriter.close();
-
-            Intent data = new Intent();
-            data.putExtra(DRAW_VIEW_INFO, drawViewInfo);
-            setResult(RESULT_OK, data);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        drawViewInfo.saveToFile();
+        Intent data = new Intent();
+        data.putExtra(DRAW_VIEW_INFO, drawViewInfo);
+        setResult(RESULT_OK, data);
     }
 
     @Override
@@ -210,11 +174,6 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
                 drawView.undo();
                 break;
             case R.id.action_go:
-                try {
-                    Log.d(TAG, "onClick: " + drawView.getActionHistoryManager().getActionJSONArray().toString(4));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
                 drawView.redo();
                 break;
         }
@@ -222,8 +181,8 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onMove(float dx, float dy) {
-//        if (null != drawView)
-//            drawView.onCanvasTranslate(dx, dy);
+        if (null != drawView)
+            drawView.scroll(dx, dy, true);
     }
 
     private class PaintChoosePopupWindow implements View.OnClickListener, MySeekBar.OnSeekBarProgressListener, PopupWindow.OnDismissListener {

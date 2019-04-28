@@ -9,6 +9,7 @@ import com.example.crazyflower.whiteboard.Element.PathElement;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -22,15 +23,16 @@ public class NewAction extends Action {
         this.element = element;
     }
 
-    public NewAction(JSONObject jsonObject, HashMap<UUID, BasicElement> map) throws JSONException {
+    public NewAction(JSONObject jsonObject, HashMap<UUID, BasicElement> map, File file) throws JSONException {
         super(ACTION_NEW, jsonObject);
-        element = ElementUtil.generateElementByJSONObject(jsonObject.getJSONObject(JSON_ELEMENT));
+        element = ElementUtil.generateElementByJSONObject(jsonObject.getJSONObject(JSON_ELEMENT), file);
         map.put(element.getUuid(), element);
     }
 
     public NewAction(Parcel source, HashMap<UUID, BasicElement> hashMap) {
         super(ACTION_NEW, source);
-        element = source.readParcelable(BasicElement.class.getClassLoader());
+//        element = source.readParcelable(BasicElement.class.getClassLoader());
+        element = BasicElement.CREATOR.createFromParcel(source);
         hashMap.put(element.getUuid(), element);
     }
 
@@ -45,9 +47,11 @@ public class NewAction extends Action {
     }
 
     @Override
-    public void writeToJSONObject(JSONObject jsonObject) throws JSONException {
-        super.writeToJSONObject(jsonObject);
-        jsonObject.put(JSON_ELEMENT, element.toJSONObject());
+    public void writeToJSONObject(JSONObject jsonObject, File file) throws JSONException {
+        super.writeToJSONObject(jsonObject, file);
+        JSONObject elementJSON = new JSONObject();
+        element.writeToJSONObject(elementJSON, file);
+        jsonObject.put(JSON_ELEMENT, elementJSON);
     }
 
     public BasicElement getElement() {
@@ -57,6 +61,7 @@ public class NewAction extends Action {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
-        dest.writeParcelable(element, flags);
+        element.writeToParcel(dest, flags);
+//        dest.writeParcelable(element, flags);
     }
 }

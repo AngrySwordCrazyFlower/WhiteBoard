@@ -1,9 +1,9 @@
 package com.example.crazyflower.whiteboard.Element;
 
-import android.os.Parcel;
-
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.File;
 
 public class ElementUtil {
 
@@ -15,7 +15,7 @@ public class ElementUtil {
 
     protected static final String ELEMENT_ID = "id";
 
-    public static BasicElement generateElementByJSONObject(JSONObject jsonObject) {
+    public static BasicElement generateElementByJSONObject(JSONObject jsonObject, File file) {
         BasicElement result = null;
         try {
             switch (jsonObject.getInt(ELEMENT_TYPE)) {
@@ -23,7 +23,7 @@ public class ElementUtil {
                     result = new PathElement(jsonObject);
                     break;
                 case BITMAP_ELEMENT:
-                    result = new BitmapElement(jsonObject);
+                    result = new BitmapElement(jsonObject, file);
                     break;
             }
         } catch (JSONException e) {

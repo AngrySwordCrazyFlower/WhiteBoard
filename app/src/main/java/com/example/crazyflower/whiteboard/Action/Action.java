@@ -9,6 +9,7 @@ import com.example.crazyflower.whiteboard.Element.BasicElement;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -59,7 +60,7 @@ public abstract class Action implements Parcelable {
 
     protected Action(int type, JSONObject jsonObject) throws JSONException {
         this.type = type;
-        this.id = UUID.fromString(jsonObject.getString(jsonObject.getString(JSON_ID)));
+        this.id = UUID.fromString(jsonObject.getString(JSON_ID));
     }
 
     protected Action(int type, Parcel source) {
@@ -70,34 +71,32 @@ public abstract class Action implements Parcelable {
     /**
      * 恢复。根据该动作的记录，重做该动作。
      * @param basicElements 用于进行操作的元素列表，比如新增一个元素，则该元素应该新增在这个列表中。
-     *                      考虑是否换为DrawView
      */
     public abstract void redo(List<BasicElement> basicElements);
 
     /**
      * 撤销。根据该动作的记录，撤销该动作。
      * @param basicElements 用于进行操作的元素列表，比如新增一个元素，则该元素应该从这个列表中删除。
-     *                      考虑是否换为DrawView
      */
     public abstract void undo(List<BasicElement> basicElements);
 
-    public static JSONObject toJSONObject(Action action) throws JSONException {
+    public static JSONObject toJSONObject(Action action, File file) throws JSONException {
         JSONObject jsonObject = new JSONObject();
-        action.writeToJSONObject(jsonObject);
+        action.writeToJSONObject(jsonObject, file);
         return jsonObject;
     }
 
-    public void writeToJSONObject(JSONObject jsonObject) throws JSONException {
+    public void writeToJSONObject(JSONObject jsonObject, File file) throws JSONException {
         jsonObject.put(JSON_TYPE, type);
         jsonObject.put(JSON_ID, id.toString());
     }
 
-    public static Action generateByJSONObject(JSONObject jsonObject, HashMap<UUID, BasicElement> map) {
+    public static Action generateByJSONObject(JSONObject jsonObject, HashMap<UUID, BasicElement> map, File file) {
         Action result = null;
         try {
             switch (jsonObject.getInt("type")) {
                 case ACTION_NEW:
-                    result = new NewAction(jsonObject, map);
+                    result = new NewAction(jsonObject, map, file);
                     break;
                 case ACTION_DELETE:
                     result = new DeleteAction(jsonObject, map);

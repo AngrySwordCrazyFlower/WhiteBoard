@@ -1,6 +1,7 @@
 package com.example.crazyflower.whiteboard.Element;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -12,7 +13,18 @@ import android.util.Log;
 
 import com.example.crazyflower.whiteboard.DrawViewUtil;
 
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class BitmapElement extends BasicElement {
 
@@ -24,28 +36,22 @@ public class BitmapElement extends BasicElement {
     public BitmapElement(Bitmap bitmap) {
         super(ElementUtil.BITMAP_ELEMENT);
         init();
-
         this.bitmap = bitmap;
     }
 
     protected BitmapElement(Parcel source) {
         super(ElementUtil.BITMAP_ELEMENT, source);
         init();
-
         bitmap = source.readParcelable(Bitmap.class.getClassLoader());
-
-        float[] values = new float[9];
-        source.readFloatArray(values);
-        transformMatrix.setValues(values);
     }
 
-    protected BitmapElement(JSONObject jsonObject) {
+    protected BitmapElement(JSONObject jsonObject, File file) {
         super(jsonObject);
         init();
+        bitmap = BitmapFactory.decodeFile(file.getPath() + File.separator + uuid);
     }
 
     protected void init() {
-        bitmap = null;
         paint = new Paint();
         transformMatrix = new Matrix();
     }
@@ -58,7 +64,6 @@ public class BitmapElement extends BasicElement {
             matrix = new Matrix();
             matrix.postConcat(this.transformMatrix);
             matrix.postConcat(super.tempTransformMatrix);
-//            tempTransformMatrix.postScale(DrawViewUtil.CHOSEN_SCALE_COEFFICIENT, DrawViewUtil.CHOSEN_SCALE_COEFFICIENT, center.x, center.y);
         }
         else {
             matrix = this.transformMatrix;
@@ -125,31 +130,33 @@ public class BitmapElement extends BasicElement {
         this.transformMatrix.postConcat(matrix);
     }
 
+//    @Override
+//    public JSONObject toJSONObject(File file) {
+//        return new JSONObject();
+//    }
+
     @Override
-    public JSONObject toJSONObject() {
-        return new JSONObject();
+    public void writeToJSONObject(JSONObject jsonObject, File file) throws JSONException {
+        super.writeToJSONObject(jsonObject, file);
+        if (file.exists() && file.isDirectory()) {
+            File bitmapFile = new File(file.getPath() + File.separator + uuid.toString());
+            if (!bitmapFile.exists()) {
+                try {
+                    BufferedOutputStream  bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(bitmapFile));
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, bufferedOutputStream);
+                    bufferedOutputStream.flush();
+                    bufferedOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
         dest.writeParcelable(bitmap, flags);
-        float[] values = new float[9];
-        transformMatrix.getValues(values);
-        dest.writeFloatArray(values);
     }
-
-    public static final Parcelable.Creator<BitmapElement> CREATOR = new Parcelable.Creator<BitmapElement>() {
-
-        @Override
-        public BitmapElement createFromParcel(Parcel source) {
-            return new BitmapElement(source);
-        }
-
-        @Override
-        public BitmapElement[] newArray(int size) {
-            return new BitmapElement[size];
-        }
-    };
 
 }
