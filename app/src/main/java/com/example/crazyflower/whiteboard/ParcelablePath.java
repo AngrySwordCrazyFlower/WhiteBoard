@@ -130,4 +130,5 @@ public class ParcelablePath implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeTypedList(pointFs);
     }
+
 }

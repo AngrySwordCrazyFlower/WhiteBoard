@@ -189,12 +189,14 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
 
         LinearLayout contentView;
         PopupWindow popupWindow;
+        MySeekBar mySeekBar;
 
         PaintChoosePopupWindow() {
             Activity outer = DrawActivity.this;
+
             contentView = (LinearLayout) outer.getLayoutInflater().inflate(R.layout.popupwindow_paint_choose, (ViewGroup) outer.getWindow().getDecorView(), false);
 
-            MySeekBar mySeekBar = contentView.findViewById(R.id.line_weight_seek_bar);
+            mySeekBar = contentView.findViewById(R.id.line_weight_seek_bar);
             mySeekBar.setProgress((drawView.getPathStrokeWidth() - DrawViewUtil.PAINT_MIN_STROKE_WIDTH) / (DrawViewUtil.PAINT_MAX_STROKE_WIDTH - DrawViewUtil.PAINT_MIN_STROKE_WIDTH) * 100);
             mySeekBar.setColor(drawView.getPathColor());
             mySeekBar.setOnSeekBarProgressListener(this);
@@ -221,9 +223,7 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
             popupWindow.setFocusable(true);
             popupWindow.setTouchable(true);
             popupWindow.setOutsideTouchable(false);
-
             popupWindow.setOnDismissListener(this);
-
         }
 
 
@@ -233,35 +233,35 @@ public class DrawActivity extends AppCompatActivity implements View.OnClickListe
             GradientDrawable background = (GradientDrawable) view.getBackground();
             switch (v.getId()) {
                 case R.id.line_color_aqua:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(0, 255, 255));
+                    mySeekBar.setColor(Color.rgb(0, 255, 255));
                     background.setColor(Color.rgb(0, 255, 255));
                     break;
                 case R.id.line_color_black:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(0, 0, 0));
+                    mySeekBar.setColor(Color.rgb(0, 0, 0));
                     background.setColor(Color.rgb(0, 0, 0));
                     break;
                 case R.id.line_color_blue:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(0, 0, 255));
+                    mySeekBar.setColor(Color.rgb(0, 0, 255));
                     background.setColor(Color.rgb(0, 0, 255));
                     break;
                 case R.id.line_color_green:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(0, 255, 0));
+                    mySeekBar.setColor(Color.rgb(0, 255, 0));
                     background.setColor(Color.rgb(0, 255, 0));
                     break;
                 case R.id.line_color_purple:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(255, 0, 255));
+                    mySeekBar.setColor(Color.rgb(255, 0, 255));
                     background.setColor(Color.rgb(255, 0, 255));
                     break;
                 case R.id.line_color_red:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(255, 0, 0));
+                    mySeekBar.setColor(Color.rgb(255, 0, 0));
                     background.setColor(Color.rgb(255, 0, 0));
                     break;
                 case R.id.line_color_white:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(255, 255, 255));
+                    mySeekBar.setColor(Color.rgb(255, 255, 255));
                     background.setColor(Color.rgb(255, 255, 255));
                     break;
                 case R.id.line_color_yellow:
-                    ((MySeekBar) contentView.findViewById(R.id.line_weight_seek_bar)).setColor(Color.rgb(255, 255, 0));
+                    mySeekBar.setColor(Color.rgb(255, 255, 0));
                     background.setColor(Color.rgb(255, 255, 0));
                     break;
             }

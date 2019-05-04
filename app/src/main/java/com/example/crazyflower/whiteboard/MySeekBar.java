@@ -181,6 +181,7 @@ public class MySeekBar extends View implements View.OnTouchListener, GestureDete
     public void setColor(int color) {
         this.progressPaint.setColor(color);
         this.innerCirclePaint.setColor(color);
+        invalidate();
     }
 
     public void setOnSeekBarProgressListener(OnSeekBarProgressListener onSeekBarProgressListener) {

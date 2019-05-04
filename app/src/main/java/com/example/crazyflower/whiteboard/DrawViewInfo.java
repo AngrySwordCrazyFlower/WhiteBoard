@@ -2,7 +2,7 @@ package com.example.crazyflower.whiteboard;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
+import android.support.annotation.NonNull;
 
 import com.example.crazyflower.whiteboard.Action.ActionHistoryManager;
 
@@ -13,13 +13,12 @@ import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-public class DrawViewInfo implements Parcelable {
+public class DrawViewInfo implements Parcelable, Comparable<DrawViewInfo> {
 
     private static final String TAG = "DrawViewInfo";
 
@@ -32,20 +31,6 @@ public class DrawViewInfo implements Parcelable {
     String title;
 
     String drawViewFolderPath;
-
-//    public DrawViewInfo() {
-//        actionHistoryManager = new ActionHistoryManager();
-//        title = "无名";
-//        drawViewFolderPath = null;
-//    }
-
-//    public DrawViewInfo(String drawViewFolderPath) {
-//        actionHistoryManager = new ActionHistoryManager();
-//        title = "无名";
-//        this.drawViewFolderPath = drawViewFolderPath;
-//    }
-
-
 
     private DrawViewInfo(String drawViewFolderPath) {
         this.drawViewFolderPath = drawViewFolderPath;
@@ -60,7 +45,6 @@ public class DrawViewInfo implements Parcelable {
     }
 
     protected DrawViewInfo(Parcel in) {
-//        actionHistoryManager = in.readParcelable(ActionHistoryManager.class.getClassLoader());
         actionHistoryManager = new ActionHistoryManager(in);
         drawViewFolderPath = in.readString();
         title = in.readString();
@@ -124,7 +108,6 @@ public class DrawViewInfo implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         actionHistoryManager.writeToParcel(dest, flags);
-//        dest.writeParcelable(actionHistoryManager, flags);
         dest.writeString(drawViewFolderPath);
         dest.writeString(title);
     }
@@ -184,11 +167,11 @@ public class DrawViewInfo implements Parcelable {
         }
 
         return new DrawViewInfo(drawViewFolderPath, title, actionHistoryManager);
+    }
 
-//        DrawViewInfo result = null;
-//        String title = jsonObject.getString(JSON_TITLE);
-//        ActionHistoryManager actionHistoryManager = ActionHistoryManager.generateByDrawViewFolder(jsonObject.getJSONObject(JSON_HISTORY), file);
-//        result = new DrawViewInfo(file.getName(), title, actionHistoryManager);
+    @Override
+    public int compareTo(@NonNull DrawViewInfo o) {
+        return Long.compare(actionHistoryManager.getLastChangeTime(), o.actionHistoryManager.getLastChangeTime());
     }
 
 }

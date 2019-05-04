@@ -24,14 +24,14 @@ public class DrawViewRecyclerAdapter extends RecyclerView.Adapter<DrawViewRecycl
 
     private static final String TAG = "DrawViewRecyclerAdapter";
 
-    List<DrawViewInfo> drawViewInfos;
+    CompareBaseLinkedList<DrawViewInfo> drawViewInfos;
 
     DateFormat dateFormat;
 
     RecyclerViewItemChildViewClickListener recyclerViewItemChildViewClickListener;
 
     public DrawViewRecyclerAdapter() {
-        drawViewInfos = new ArrayList<>();
+        drawViewInfos = new CompareBaseLinkedList<DrawViewInfo>();
         dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
     }
 
@@ -147,23 +147,20 @@ public class DrawViewRecyclerAdapter extends RecyclerView.Adapter<DrawViewRecycl
 //        }
 //    }
 
-    public List<DrawViewInfo> getData() {
+    public CompareBaseLinkedList<DrawViewInfo> getData() {
         return drawViewInfos;
     }
 
     public void updateItem(DrawViewInfo drawViewInfo) {
-        int index = drawViewInfos.indexOf(drawViewInfo);
-        Log.d(TAG, "updateItem: " + index);
-        if (index != -1) {
-            drawViewInfos.remove(index);
-            drawViewInfos.add(0, drawViewInfo);
-            notifyItemRangeChanged(0, index + 1);
-        }
+        int index = drawViewInfos.remove(drawViewInfo);
+        notifyItemRemoved(index);
+        index = drawViewInfos.add(drawViewInfo);
+        notifyItemRangeChanged(index, drawViewInfos.size() - index);
     }
 
     public void addItem(DrawViewInfo drawViewInfo) {
-        drawViewInfos.add(0, drawViewInfo);
-        notifyItemInserted(0);
+        int index = drawViewInfos.add(drawViewInfo);
+        notifyItemInserted(index);
     }
 
 }
